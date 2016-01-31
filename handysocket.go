@@ -59,6 +59,10 @@ func (hs *HandySocket) Send(data string) {
 	hs.send <- data
 }
 
+func (hs *HandySocket) Close() {
+	hs.conn.Close()
+}
+
 func (hs *HandySocket) Run() {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -74,9 +78,6 @@ func (hs *HandySocket) Run() {
 		return
 	}
 	hs.conn = conn
-	if hs.openCallback != nil {
-		hs.openCallback()
-	}
 
 	// Running go-routine for sending messages to the client
 	hs.send = make(chan string)
@@ -86,6 +87,10 @@ func (hs *HandySocket) Run() {
 			hs.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 		}
 	}()
+
+	if hs.openCallback != nil {
+		hs.openCallback()
+	}
 
 	// Handling incoming messages from client
 	for {
